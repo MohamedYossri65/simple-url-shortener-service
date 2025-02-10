@@ -6,6 +6,11 @@ dotenv.config();
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { ValidationPipe } from '@nestjs/common'
 import morgan from 'morgan';
+import helmet from 'helmet';
+import ExpressMongoSanitize from 'express-mongo-sanitize';
+import compression from 'compression';
+
+
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -16,6 +21,14 @@ async function bootstrap() {
   app.useGlobalPipes(
     new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }),
   )
+
+  // Set security HTTP headers
+  app.use(helmet());
+  // Data sanitization against NoSQL query injection
+  app.use(ExpressMongoSanitize());
+  // Compression middleware
+  app.use(compression());
+  // Logging middleware in development environment  (optional)  // Enable this line only in development environment to see logs in console.
   if (process.env.NODE_ENV === 'development') {
     app.use(morgan('dev'))
   }
