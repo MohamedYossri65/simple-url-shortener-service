@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  db_test:
+    image: postgres:13
+    container_name: postgres_db_test
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: url_shortener_db_test
+    ports:
+      - '5433:5432'
+    volumes:
+      - postgres_data_test:/var/lib/postgresql/data
+      - ./src/database/initdb:/docker-entrypoint-initdb.d
+    restart: always
+
+  pgadmin:
+    image: dpage/pgadmin4
+    ports:
+      - 5454:5454/tcp
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@mydomain.com
+      - PGADMIN_DEFAULT_PASSWORD=postgres
+      - PGADMIN_LISTEN_PORT=5454
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: url_shortener_app
+    volumes:
+      - ./src:/url_shortener/src:ro  # Read-only for development
+    ports:
+      - '3000:3000'
+    environment:
+      NODE_ENV: development
+      DB_HOST: db_test
+      DB_PORT: 5432
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_NAME: url_shortener_db_test
+      CHOKIDAR_USEPOLLING: 'true'
+    depends_on:
+      - db_test
+    command: ["npm", "run", "test"]  # test command
+
+volumes:
+  postgres_data_test:

@@ -1,0 +1,35 @@
+services:
+  db_live:
+    image: postgres:13
+    container_name: postgres_db_live
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: dbProduction
+    ports:
+      - '5433:5432'
+    volumes:
+      - postgres_data_production:/var/lib/postgresql/data
+      - ./src/database/initdb:/docker-entrypoint-initdb.d
+    restart: always
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: url_shortener_app
+    ports:
+      - '3000:3000'
+    environment:
+      NODE_ENV: production
+      DB_HOST: db_live
+      DB_PORT: 5432
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_NAME: dbProduction
+    depends_on:
+      - db_live
+    command: ["npm", "run", "start"]
+
+volumes:
+  postgres_data_production:
