@@ -1,7 +1,6 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Headers, HttpCode, HttpStatus, Ip, Param, Post, Req, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '../guards/authentication.guard';
 import { UrlService } from './url.service';
-import { Request } from 'express';
 import { CustomResponse } from '../utils/custom-response';
 import { ShortenUrlDto } from './dtos/shorten-url.dto';
 import { RedirectUrlDto } from './dtos/redirect-url.dto';
@@ -19,8 +18,9 @@ export class UrlController {
 
   @Get(':shortUrl')
   @HttpCode(HttpStatus.PERMANENT_REDIRECT)
-  async redirect(@Param() params: RedirectUrlDto, @Req() req: Request): Promise<CustomResponse> {
-    return await this.urlService.getLongUrl(params.shortUrl, req.headers['user-agent'], req.ip);
+  async redirect(@Param() params: RedirectUrlDto ,@Headers() headers: Record<string, string>, @Ip()  ip:String): Promise<CustomResponse> {
+    const userAgent = headers['user-agent'] || 'unknown';
+    return await this.urlService.getLongUrl(params.shortUrl, userAgent, ip);
   }
   @Get('stats/:shortUrl')
   @UseGuards(AuthGuard)
